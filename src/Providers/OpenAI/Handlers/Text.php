@@ -158,7 +158,6 @@ class Text
                 'reasoning' => $request->providerOptions('reasoning'),
                 'text' => $request->providerOptions('text'),
                 'store' => $request->providerOptions('store'),
-                'reasoning_effort' => $request->providerOptions('reasoning_effort'),
                 'include' => $request->providerOptions('include'),
             ]))
         );

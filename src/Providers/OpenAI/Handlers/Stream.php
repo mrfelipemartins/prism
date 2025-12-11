@@ -534,7 +534,6 @@ class Stream
                     'truncation' => $request->providerOptions('truncation'),
                     'reasoning' => $request->providerOptions('reasoning'),
                     'store' => $request->providerOptions('store'),
-                    'reasoning_effort' => $request->providerOptions('reasoning_effort'),
                     'include' => $request->providerOptions('include'),
                 ]))
             );
