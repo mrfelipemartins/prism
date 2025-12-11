@@ -373,7 +373,7 @@ class Stream
     protected function mapToolCalls(array $toolCalls): array
     {
         return collect($toolCalls)
-            ->map(fn ($toolCall): ToolCall => new ToolCall(
+            ->map(fn($toolCall): ToolCall => new ToolCall(
                 id: data_get($toolCall, 'id'),
                 name: data_get($toolCall, 'name'),
                 arguments: data_get($toolCall, 'arguments'),
@@ -533,6 +533,9 @@ class Stream
                     ] : null,
                     'truncation' => $request->providerOptions('truncation'),
                     'reasoning' => $request->providerOptions('reasoning'),
+                    'store' => $request->providerOptions('store'),
+                    'reasoning_effort' => $request->providerOptions('reasoning_effort'),
+                    'include' => $request->providerOptions('include'),
                 ]))
             );
 
