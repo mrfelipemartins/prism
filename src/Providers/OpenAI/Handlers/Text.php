@@ -64,8 +64,8 @@ class Text
         $responseMessage = new AssistantMessage(
             content: data_get($data, 'output.{last}.content.0.text') ?? '',
             toolCalls: ToolCallMap::map(
-                array_filter(data_get($data, 'output', []), fn (array $output): bool => $output['type'] === 'function_call'),
-                array_filter(data_get($data, 'output', []), fn (array $output): bool => $output['type'] === 'reasoning'),
+                array_filter(data_get($data, 'output', []), fn(array $output): bool => $output['type'] === 'function_call'),
+                array_filter(data_get($data, 'output', []), fn(array $output): bool => $output['type'] === 'reasoning'),
             ),
             additionalContent: Arr::whereNotNull([
                 'citations' => $this->citations,
@@ -90,9 +90,11 @@ class Text
     {
         $toolResults = $this->callTools(
             $request->tools(),
-            ToolCallMap::map(array_filter(
-                data_get($data, 'output', []),
-                fn (array $output): bool => $output['type'] === 'function_call')
+            ToolCallMap::map(
+                array_filter(
+                    data_get($data, 'output', []),
+                    fn(array $output): bool => $output['type'] === 'function_call'
+                )
             ),
         );
 
@@ -122,6 +124,11 @@ class Text
         return $this->responseBuilder->steps->count() < $request->maxSteps();
     }
 
+    protected function finalRequestStep(Request $request): bool
+    {
+        return $this->responseBuilder->steps->count() === $request->maxSteps() - 1;
+    }
+
     protected function sendRequest(Request $request): ClientResponse
     {
         /** @var ClientResponse $response */
@@ -136,7 +143,11 @@ class Text
                 'top_p' => $request->topP(),
                 'metadata' => $request->providerOptions('metadata'),
                 'tools' => $this->buildTools($request),
-                'tool_choice' => ToolChoiceMap::map($request->toolChoice()),
+                'tool_choice' => ToolChoiceMap::map(
+                    $request->toolChoice(
+                        $this->finalRequestStep($request),
+                    ),
+                ),
                 'parallel_tool_calls' => $request->providerOptions('parallel_tool_calls'),
                 'previous_response_id' => $request->providerOptions('previous_response_id'),
                 'service_tier' => $request->providerOptions('service_tier'),
@@ -145,7 +156,8 @@ class Text
                 ] : null,
                 'truncation' => $request->providerOptions('truncation'),
                 'reasoning' => $request->providerOptions('reasoning'),
-                'store' => $request->providerOptions('store'),
+                'text' => $request->providerOptions('text'),
+                'store' => $request->providerOptions('store')
             ]))
         );
 
@@ -168,7 +180,7 @@ class Text
         $this->responseBuilder->addStep(new Step(
             text: data_get($data, 'output.{last}.content.0.text') ?? '',
             finishReason: $this->mapFinishReason($data),
-            toolCalls: ToolCallMap::map(array_filter($output, fn (array $output): bool => $output['type'] === 'function_call')),
+            toolCalls: ToolCallMap::map(array_filter($output, fn(array $output): bool => $output['type'] === 'function_call')),
             toolResults: $toolResults,
             providerToolCalls: ProviderToolCallMap::map($output),
             usage: new Usage(
@@ -188,8 +200,8 @@ class Text
             additionalContent: Arr::whereNotNull([
                 'citations' => $this->citations,
                 'reasoningSummaries' => collect($output)
-                    ->filter(fn (array $output): bool => $output['type'] === 'reasoning')
-                    ->flatMap(fn (array $output): array => Arr::pluck($output['summary'] ?? [], 'text'))
+                    ->filter(fn(array $output): bool => $output['type'] === 'reasoning')
+                    ->flatMap(fn(array $output): array => Arr::pluck($output['summary'] ?? [], 'text'))
                     ->filter()
                     ->toArray(),
             ]),
